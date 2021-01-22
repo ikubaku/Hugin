@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fs::File;
 
 use clap::clap_app;
 
@@ -6,6 +7,12 @@ use log::{debug, info, trace, warn, error};
 use flexi_logger::{Logger, LogSpecification, LevelFilter, LogSpecBuilder, Duplicate};
 
 mod config;
+mod error;
+
+use config::Config;
+use std::io::Read;
+use crate::config::ccfindersw::CCFinderSWConfig;
+use crate::error::NoValidConfigurationError;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Parse options
@@ -50,6 +57,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Load configuration
     if let Some(filename) = matches.value_of("CONFIG") {
         info!("Loading configuration from file: {}...", filename);
+        let mut file = File::open(filename)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let config: Config = toml::from_str(contents.as_str())?;
+        let ccfindersw_config = CCFinderSWConfig::try_from_config(config).ok_or_else(|| {
+            error!("No valid configuration.");
+            NoValidConfigurationError
+        })?;
+        println!("CCFinderSW configuration: {:?}", ccfindersw_config);
     } else {
         info!("Using the default configuration.")
     }
