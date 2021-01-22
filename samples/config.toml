@@ -1,0 +1,7 @@
+clone_detector_kind = "CCFinderSW"
+
+[clone_detector_config]
+executable_path = "~/tools/CCFinderSW-1.0/bin/CCFinderSW"
+token_length = "50"
+language = "CPlusPlus"
+extensions = "pde,ino"
