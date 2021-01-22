@@ -1,3 +1,4 @@
+munin_database_root = "~/munin"
 clone_detector_kind = "CCFinderSW"
 
 [clone_detector_config]

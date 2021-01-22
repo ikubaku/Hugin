@@ -61,6 +61,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         let config: Config = toml::from_str(contents.as_str())?;
+        println!("Munin database directory: {}", config.munin_database_root.to_str().unwrap());
         let ccfindersw_config = CCFinderSWConfig::try_from_config(config).ok_or_else(|| {
             error!("No valid configuration.");
             NoValidConfigurationError
