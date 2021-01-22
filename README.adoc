@@ -1,0 +1,10 @@
+= Hugin
+
+image:https://github.com/ikubaku/Hugin/workflows/build/badge.svg[] image:https://github.com/ikubaku/Hugin/workflows/test/badge.svg[] image:https://github.com/ikubaku/Hugin/workflows/rustfmt/badge.svg[]
+
+An Arduino Project code cloning detector: Job dispatcher module
+
+The intelligent friend of Munin: https://github.com/ikubaku/Munin
+
+== License
+This program is dual-licensed. Please agree with either The MIT License (link:LICENSE-MIT[]) or the Apache License 2.0 (link:LICENSE-APACHE[]) before using the software.
