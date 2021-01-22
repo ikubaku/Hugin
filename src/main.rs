@@ -3,7 +3,7 @@ use std::error::Error;
 use clap::clap_app;
 
 use log::{debug, info, trace, warn, error};
-use flexi_logger::{Logger, LogSpecification, LevelFilter, LogSpecBuilder};
+use flexi_logger::{Logger, LogSpecification, LevelFilter, LogSpecBuilder, Duplicate};
 
 mod config;
 
@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         _ => panic!("Invalid verbosity was specified(maybe too much switches?)."),
     };
     let log_spec = log_spec_builder.build();
-    let logger = Logger::with(log_spec);
+    let logger = Logger::with(log_spec).duplicate_to_stderr(Duplicate::Error);
     let logger = if matches.is_present("LOG") {
         println!("Enabled logging to the log file.");
         logger.log_to_file()
