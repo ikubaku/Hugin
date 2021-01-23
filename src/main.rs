@@ -18,6 +18,7 @@ use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::error::NoValidConfigurationError;
 use crate::session::Session;
 use crate::job::Job;
+use std::str::FromStr;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Parse options
@@ -74,10 +75,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     // Load session
+    let session_path = PathBuf::from_str(matches.value_of("SESSION").unwrap())?;
     let session: Session;
     {
         info!("Loading session...");
-        let mut filename = PathBuf::new();
+        let mut filename = session_path.clone();
         filename.push(matches.value_of("SESSION").unwrap());
         filename.push("session.toml");
         let mut file = File::open(filename)?;
@@ -90,7 +92,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Load jobs
     let mut jobs = Vec::new();
-    for job_file in session.jobs_path.read_dir()? {
+    for job_file in session_path.canonicalize()?.join(session.jobs_path.as_path()).read_dir()? {
         debug!("job_file: {:?}", job_file);
         let path = session.jobs_path.join(job_file?.path());
         let mut file = File::open(path)?;
