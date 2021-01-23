@@ -10,12 +10,14 @@ use flexi_logger::{Logger, LogSpecification, LevelFilter, LogSpecBuilder, Duplic
 mod config;
 mod error;
 mod session;
+mod job;
 
 use config::Config;
 use std::io::Read;
 use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::error::NoValidConfigurationError;
 use crate::session::Session;
+use crate::job::Job;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Parse options
@@ -84,6 +86,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         session = toml::from_str(contents.as_str())?;
         info!("The project path is: {}", session.project_path.to_str().unwrap());
         info!("The jobs path is: {}", session.jobs_path.to_str().unwrap());
+    }
+
+    // Load jobs
+    let mut jobs = Vec::new();
+    for job_file in session.jobs_path.read_dir()? {
+        debug!("job_file: {:?}", job_file);
+        let path = session.jobs_path.join(job_file?.path());
+        let mut file = File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let job: Job = toml::from_str(contents.as_str())?;
+        println!("Found job: {:?}", job);
+        jobs.push(job);
     }
 
     println!("Hello, world!");
