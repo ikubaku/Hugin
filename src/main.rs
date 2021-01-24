@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use clap::clap_app;
+
 use flexi_logger::{Duplicate, LevelFilter, LogSpecBuilder, LogSpecification, Logger};
+
 use log::{debug, error, info, trace, warn};
 
 mod clone_pair;

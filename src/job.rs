@@ -1,9 +1,11 @@
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
-use crate::error::InvalidPathError;
 use semver::Version;
+
 use serde_derive::Deserialize;
+
+use crate::error::InvalidPathError;
 
 #[derive(Debug, Deserialize)]
 pub struct SourceInfo {

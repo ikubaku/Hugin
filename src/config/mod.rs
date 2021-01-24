@@ -3,8 +3,9 @@ use std::env;
 use std::error::Error;
 use std::path::PathBuf;
 
-use crate::config::ccfindersw::CCFinderSWConfig;
 use serde_derive::Deserialize;
+
+use crate::config::ccfindersw::CCFinderSWConfig;
 
 pub mod ccfindersw;
 

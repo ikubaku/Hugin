@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::fmt;
+use std::iter::FromIterator;
 use std::path::PathBuf;
 use std::str::FromStr;
 
 use log::error;
 
 use crate::config::{CloneDetectorKind, Config};
-use std::iter::FromIterator;
 
 #[derive(Debug)]
 pub struct InvalidConfigurationError {

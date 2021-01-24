@@ -1,10 +1,14 @@
-use log::{debug, error, info, trace, warn};
 use std::error::Error;
 use std::fs;
 use std::fs::File;
+use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use log::{debug, error, info, trace, warn};
+
+use zip::read::ZipFile;
+use zip::result::ZipError;
 use zip::ZipArchive;
 
 use crate::clone_pair::ClonePair;
@@ -13,9 +17,6 @@ use crate::error::InvalidPathError;
 use crate::job::Job;
 use crate::runner::Runner;
 use crate::session::Session;
-use std::io::Read;
-use zip::read::ZipFile;
-use zip::result::ZipError;
 
 pub struct CCFinderSWRunner {
     project_path: PathBuf,
