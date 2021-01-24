@@ -1,8 +1,8 @@
-use std::path::Path;
 use std::error::Error;
+use std::path::Path;
 
-use crate::job::Job;
 use crate::clone_pair::ClonePair;
+use crate::job::Job;
 
 pub mod ccfindersw;
 
