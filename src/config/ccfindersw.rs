@@ -6,6 +6,7 @@ use std::fmt;
 use log::error;
 
 use crate::config::{Config, CloneDetectorKind};
+use std::iter::FromIterator;
 
 #[derive(Debug)]
 pub struct InvalidConfigurationError {
@@ -29,6 +30,12 @@ impl fmt::Display for InvalidConfigurationError {
 #[derive(Debug, PartialEq)]
 pub enum Languages {
     CPlusPlus,
+}
+
+fn serialize_language(l: &Languages) -> String {
+    match l {
+        Languages::CPlusPlus => String::from("CPlusPlus"),
+    }
 }
 
 fn deserialize_language(s: &str) -> Result<Languages, ()> {
@@ -60,6 +67,24 @@ impl CCFinderSWConfig {
                 }
             }
         }
+    }
+
+    pub fn default() -> Self {
+        CCFinderSWConfig {
+            executable_path: PathBuf::from("CCFinderSW"),
+            token_length: 50,
+            language: Languages::CPlusPlus,
+            extensions: Vec::from([String::from("pde"), String::from("ino")]),
+        }
+    }
+
+    pub fn to_hashmap(&self) -> HashMap<String, String> {
+        [
+            (String::from("executable_path"), String::from(self.executable_path.to_str().unwrap())),
+            (String::from("token_length"), self.token_length.to_string()),
+            (String::from("language"), serialize_language(&self.language)),
+            (String::from("extensions"), self.extensions.join(",")),
+        ].iter().cloned().collect()
     }
 
     fn from_hashmap(hashmap: HashMap<String, String>) -> Result<Self, InvalidConfigurationError> {

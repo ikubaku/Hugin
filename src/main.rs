@@ -62,16 +62,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     info!("Started the logger.");
 
     // Load configuration
-    let config: Config;
+    let config: Option<Config>;
     if let Some(filename) = matches.value_of("CONFIG") {
         info!("Loading configuration from file: {}...", filename);
         let mut file = File::open(filename)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
-        config = toml::from_str(contents.as_str())?;
-        println!("Munin database directory: {}", config.munin_database_root.to_str().unwrap());
+        config = Some(toml::from_str(contents.as_str())?);
+        println!("Munin database directory: {}", config.clone().unwrap().munin_database_root.to_str().unwrap());
     } else {
-        info!("Using the default configuration.")
+        info!("Using the default configuration.");
+        config = None;
     }
 
     // Load session
@@ -101,6 +102,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         let job: Job = toml::from_str(contents.as_str())?;
         println!("Found job: {:?}", job);
         jobs.push(job);
+    }
+
+    match config {
+        None => {
+            let config = Config::default();
+        }
+        Some(config) => {
+            let ccfindersw_config = CCFinderSWConfig::try_from_config(config).ok_or_else(|| {
+                error!("No valid configuration.");
+                NoValidConfigurationError
+            })?;
+            println!("CCFinderSW configuration: {:?}", ccfindersw_config);
+        }
     }
 
     println!("Hello, world!");
