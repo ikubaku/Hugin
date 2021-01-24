@@ -95,13 +95,15 @@ impl CCFinderSWConfig {
 
     fn from_hashmap(hashmap: &HashMap<String, String>) -> Result<Self, InvalidConfigurationError> {
         let executable_path = PathBuf::from(
-            shellexpand::tilde(
-                hashmap.get("executable_path").ok_or(
+            shellexpand::tilde(hashmap.get("executable_path").ok_or(
                 InvalidConfigurationError::new("Missing key: `executable_path`"),
-                )?
-            ).as_ref()
+            )?)
+            .as_ref(),
         )
-            .canonicalize().or(Err(InvalidConfigurationError::new("Could not canonicalize the specified path.")))?;
+        .canonicalize()
+        .or(Err(InvalidConfigurationError::new(
+            "Could not canonicalize the specified path.",
+        )))?;
         let token_length = u32::from_str(hashmap.get("token_length").ok_or(
             InvalidConfigurationError::new("Missing key: `token_length`"),
         )?)

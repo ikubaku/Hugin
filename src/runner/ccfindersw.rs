@@ -45,7 +45,13 @@ impl Runner for CCFinderSWRunner {
         let sources_path = working_dir.path().join("src");
         fs::create_dir(&sources_path)?;
 
-        debug!("Copying the project source file...: {}", job.project.get_location_from(&self.project_path)?.to_str().unwrap());
+        debug!(
+            "Copying the project source file...: {}",
+            job.project
+                .get_location_from(&self.project_path)?
+                .to_str()
+                .unwrap()
+        );
         fs::copy(
             job.project.get_location_from(&self.project_path)?,
             sources_path.join(project_source_name),
@@ -59,21 +65,31 @@ impl Runner for CCFinderSWRunner {
             );
             let library_zip = File::open(library_archive_path)?;
             let mut library_archive = ZipArchive::new(library_zip)?;
-            debug!("Searching the source file: {}", job.example_sketch.get_non_canonical_path_from(
-                &Path::new(library_info.archive_root.as_str())
-                    .join("examples")
-            ).to_str().unwrap());
+            debug!(
+                "Searching the source file: {}",
+                job.example_sketch
+                    .get_non_canonical_path_from(
+                        &Path::new(library_info.archive_root.as_str()).join("examples")
+                    )
+                    .to_str()
+                    .unwrap()
+            );
             let mut file = match library_archive.by_name(
-                job.example_sketch.get_non_canonical_path_from(
-                    &Path::new(library_info.archive_root.as_str())
-                    .join("examples")
-                ).to_str().unwrap()
+                job.example_sketch
+                    .get_non_canonical_path_from(
+                        &Path::new(library_info.archive_root.as_str()).join("examples"),
+                    )
+                    .to_str()
+                    .unwrap(),
             ) {
                 Ok(f) => f,
                 Err(e) => {
                     error!(
                         "Could not open an example sketch source: {}",
-                        job.example_sketch.get_non_canonical_path_from(&Path::new("")).to_str().unwrap()
+                        job.example_sketch
+                            .get_non_canonical_path_from(&Path::new(""))
+                            .to_str()
+                            .unwrap()
                     );
                     return Err(e.into());
                 }

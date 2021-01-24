@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::env;
-use std::path::PathBuf;
 use std::error::Error;
+use std::path::PathBuf;
 
 use crate::config::ccfindersw::CCFinderSWConfig;
 use serde_derive::Deserialize;
@@ -30,6 +30,9 @@ impl Config {
     }
 
     pub fn get_absolute_database_root_path(&self) -> Result<PathBuf, Box<dyn Error>> {
-        Ok(PathBuf::from(shellexpand::tilde(self.munin_database_root.as_str()).as_ref()).canonicalize()?)
+        Ok(
+            PathBuf::from(shellexpand::tilde(self.munin_database_root.as_str()).as_ref())
+                .canonicalize()?,
+        )
     }
 }

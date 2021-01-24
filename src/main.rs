@@ -83,7 +83,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         config = Some(toml::from_str(contents.as_str())?);
         println!(
             "Munin database directory: {}",
-            config.clone().unwrap().get_absolute_database_root_path()?.to_str().unwrap(),
+            config
+                .clone()
+                .unwrap()
+                .get_absolute_database_root_path()?
+                .to_str()
+                .unwrap(),
         );
     } else {
         info!("Using the default configuration.");
@@ -104,17 +109,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         session = toml::from_str(contents.as_str())?;
         info!(
             "The project path is: {}",
-            session.get_absolute_project_path(&session_path)?.to_str().unwrap(),
+            session
+                .get_absolute_project_path(&session_path)?
+                .to_str()
+                .unwrap(),
         );
-        info!("The jobs path is: {}", session.get_absolute_jobs_path(&session_path)?.to_str().unwrap());
+        info!(
+            "The jobs path is: {}",
+            session
+                .get_absolute_jobs_path(&session_path)?
+                .to_str()
+                .unwrap()
+        );
     }
 
     // Load jobs
     let mut jobs = Vec::new();
-    for job_file in session.get_absolute_jobs_path(&session_path)?.read_dir()?
-    {
+    for job_file in session.get_absolute_jobs_path(&session_path)?.read_dir()? {
         debug!("job_file: {:?}", job_file);
-        let path = session.get_absolute_jobs_path(&session_path)?.join(job_file?.path());
+        let path = session
+            .get_absolute_jobs_path(&session_path)?
+            .join(job_file?.path());
         let mut file = File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
