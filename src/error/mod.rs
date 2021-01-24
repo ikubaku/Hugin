@@ -52,6 +52,8 @@ impl fmt::Display for InvalidConfigurationError {
     }
 }
 
+impl Error for InvalidConfigurationError {}
+
 #[derive(Debug)]
 pub struct RunnerProcessFailedError {
     status_code: i32,
