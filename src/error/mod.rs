@@ -51,3 +51,26 @@ impl fmt::Display for InvalidConfigurationError {
         write!(f, "{}", self.description)
     }
 }
+
+#[derive(Debug)]
+pub struct RunnerProcessFailedError {
+    status_code: i32,
+}
+
+impl RunnerProcessFailedError {
+    pub fn new(status_code: i32) -> Self {
+        RunnerProcessFailedError { status_code }
+    }
+}
+
+impl fmt::Display for RunnerProcessFailedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Process exited abnormally with code: {}",
+            self.status_code
+        )
+    }
+}
+
+impl Error for RunnerProcessFailedError {}

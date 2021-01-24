@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use log::{debug, error, info, trace, warn};
 
@@ -13,7 +14,7 @@ use zip::ZipArchive;
 
 use crate::clone_pair::ClonePair;
 use crate::config::ccfindersw::CCFinderSWConfig;
-use crate::error::InvalidPathError;
+use crate::error::{InvalidPathError, RunnerProcessFailedError};
 use crate::job::Job;
 use crate::runner::Runner;
 use crate::session::Session;
@@ -98,6 +99,23 @@ impl Runner for CCFinderSWRunner {
             let mut contents = String::new();
             file.read_to_string(&mut contents)?;
             write!(example_source, "{}", contents)?;
+
+            let status = Command::new(self.config.get_executable_path_as_string())
+                .current_dir(&working_dir)
+                .args(&[
+                    "D", "-d", "src", "-l", "cpp", "-o", "result", "-t", "50", "-w", "2", "-antlr",
+                    "ino|pde", "-charset", "auto",
+                ])
+                .spawn()?
+                .wait()?;
+            if status.success() {
+                let mut file = File::open(&working_dir.path().join("result.txt"))?;
+                let mut contents = String::new();
+                file.read_to_string(&mut contents);
+                debug!("Result from the detector: {}", contents);
+            } else {
+                return Err(RunnerProcessFailedError::new(status.code().unwrap()).into());
+            }
         }
         Ok(Vec::new())
     }

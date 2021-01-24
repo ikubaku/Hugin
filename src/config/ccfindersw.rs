@@ -114,4 +114,8 @@ impl CCFinderSWConfig {
             extensions,
         })
     }
+
+    pub fn get_executable_path_as_string(&self) -> String {
+        String::from(self.executable_path.to_str().unwrap())
+    }
 }
