@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use serde_derive::Deserialize;
 use crate::config::ccfindersw::CCFinderSWConfig;
+use serde_derive::Deserialize;
 
 pub mod ccfindersw;
 

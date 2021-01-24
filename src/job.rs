@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use serde_derive::Deserialize;
 use semver::Version;
+use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct SourceInfo {

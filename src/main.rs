@@ -4,20 +4,20 @@ use std::path::PathBuf;
 
 use clap::clap_app;
 
-use log::{debug, info, trace, warn, error};
-use flexi_logger::{Logger, LogSpecification, LevelFilter, LogSpecBuilder, Duplicate};
+use flexi_logger::{Duplicate, LevelFilter, LogSpecBuilder, LogSpecification, Logger};
+use log::{debug, error, info, trace, warn};
 
 mod config;
 mod error;
-mod session;
 mod job;
+mod session;
 
-use config::Config;
-use std::io::Read;
 use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::error::NoValidConfigurationError;
-use crate::session::Session;
 use crate::job::Job;
+use crate::session::Session;
+use config::Config;
+use std::io::Read;
 use std::str::FromStr;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -36,17 +36,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Initialize logger
     let mut log_spec_builder = LogSpecBuilder::new();
     log_spec_builder.default(LevelFilter::Warn);
-    log_spec_builder.insert_modules_from(
-        LogSpecification::env()
-            .unwrap_or_else(|e| panic!("Something went wrong while parsing RUST_LOG environmental variable: {:?}", e))
-    );
+    log_spec_builder.insert_modules_from(LogSpecification::env().unwrap_or_else(|e| {
+        panic!(
+            "Something went wrong while parsing RUST_LOG environmental variable: {:?}",
+            e
+        )
+    }));
     if matches.is_present("no_warning") {
         log_spec_builder.default(LevelFilter::Error);
     }
     match matches.occurrences_of("verbose") {
-        0 => {},
-        1 => {log_spec_builder.default(LevelFilter::Info); ()},
-        2 => {log_spec_builder.default(LevelFilter::Debug); ()},
+        0 => {}
+        1 => {
+            log_spec_builder.default(LevelFilter::Info);
+            ()
+        }
+        2 => {
+            log_spec_builder.default(LevelFilter::Debug);
+            ()
+        }
         _ => panic!("Invalid verbosity was specified(maybe too much switches?)."),
     };
     let log_spec = log_spec_builder.build();
@@ -69,7 +77,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         config = Some(toml::from_str(contents.as_str())?);
-        println!("Munin database directory: {}", config.clone().unwrap().munin_database_root.to_str().unwrap());
+        println!(
+            "Munin database directory: {}",
+            config
+                .clone()
+                .unwrap()
+                .munin_database_root
+                .to_str()
+                .unwrap()
+        );
     } else {
         info!("Using the default configuration.");
         config = None;
@@ -87,13 +103,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         session = toml::from_str(contents.as_str())?;
-        info!("The project path is: {}", session.project_path.to_str().unwrap());
+        info!(
+            "The project path is: {}",
+            session.project_path.to_str().unwrap()
+        );
         info!("The jobs path is: {}", session.jobs_path.to_str().unwrap());
     }
 
     // Load jobs
     let mut jobs = Vec::new();
-    for job_file in session_path.canonicalize()?.join(session.jobs_path.as_path()).read_dir()? {
+    for job_file in session_path
+        .canonicalize()?
+        .join(session.jobs_path.as_path())
+        .read_dir()?
+    {
         debug!("job_file: {:?}", job_file);
         let path = session.jobs_path.join(job_file?.path());
         let mut file = File::open(path)?;

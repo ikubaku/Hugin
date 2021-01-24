@@ -1,11 +1,11 @@
-use std::path::PathBuf;
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::fmt;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use log::error;
 
-use crate::config::{Config, CloneDetectorKind};
+use crate::config::{CloneDetectorKind, Config};
 use std::iter::FromIterator;
 
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub struct InvalidConfigurationError {
 impl InvalidConfigurationError {
     pub fn new(desc: &str) -> Self {
         InvalidConfigurationError {
-            description: String::from(desc)
+            description: String::from(desc),
         }
     }
 }
@@ -40,7 +40,7 @@ fn serialize_language(l: &Languages) -> String {
 
 fn deserialize_language(s: &str) -> Result<Languages, ()> {
     if s == "CPlusPlus" {
-        return Ok(Languages::CPlusPlus)
+        return Ok(Languages::CPlusPlus);
     } else {
         Err(())
     }
@@ -80,29 +80,43 @@ impl CCFinderSWConfig {
 
     pub fn to_hashmap(&self) -> HashMap<String, String> {
         [
-            (String::from("executable_path"), String::from(self.executable_path.to_str().unwrap())),
+            (
+                String::from("executable_path"),
+                String::from(self.executable_path.to_str().unwrap()),
+            ),
             (String::from("token_length"), self.token_length.to_string()),
             (String::from("language"), serialize_language(&self.language)),
             (String::from("extensions"), self.extensions.join(",")),
-        ].iter().cloned().collect()
+        ]
+        .iter()
+        .cloned()
+        .collect()
     }
 
     fn from_hashmap(hashmap: HashMap<String, String>) -> Result<Self, InvalidConfigurationError> {
-        let executable_path = PathBuf::from(
-            hashmap.get("executable_path")
-                .ok_or(InvalidConfigurationError::new("Missing key: `executable_path`"))?
-        );
-        let token_length = u32::from_str(
-            hashmap.get("token_length")
-                .ok_or(InvalidConfigurationError::new("Missing key: `token_length`"))?)
-            .map_err(|_| InvalidConfigurationError::new("Invalid value for `token_length`"))?;
+        let executable_path = PathBuf::from(hashmap.get("executable_path").ok_or(
+            InvalidConfigurationError::new("Missing key: `executable_path`"),
+        )?);
+        let token_length = u32::from_str(hashmap.get("token_length").ok_or(
+            InvalidConfigurationError::new("Missing key: `token_length`"),
+        )?)
+        .map_err(|_| InvalidConfigurationError::new("Invalid value for `token_length`"))?;
         let language = deserialize_language(
-            hashmap.get("language")
-                .ok_or(InvalidConfigurationError::new("Missing key: `language`"))?
-        ).or_else(|_| Err(InvalidConfigurationError::new("Invalid value for `language`")))?;
-        let extensions: Vec<String> = hashmap.get("extensions")
+            hashmap
+                .get("language")
+                .ok_or(InvalidConfigurationError::new("Missing key: `language`"))?,
+        )
+        .or_else(|_| {
+            Err(InvalidConfigurationError::new(
+                "Invalid value for `language`",
+            ))
+        })?;
+        let extensions: Vec<String> = hashmap
+            .get("extensions")
             .ok_or(InvalidConfigurationError::new("Missing key `extensions`"))?
-            .split(",").map(|s| String::from(s)).collect();
+            .split(",")
+            .map(|s| String::from(s))
+            .collect();
 
         Ok(CCFinderSWConfig {
             executable_path,
