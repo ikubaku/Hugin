@@ -5,7 +5,6 @@ use semver::Version;
 
 #[derive(Debug, Deserialize)]
 pub struct SourceInfo {
-    filename: String,
     location: PathBuf,
 }
 
