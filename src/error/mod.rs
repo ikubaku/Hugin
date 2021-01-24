@@ -32,3 +32,22 @@ impl fmt::Display for InvalidPathError {
 }
 
 impl Error for InvalidPathError {}
+
+#[derive(Debug)]
+pub struct InvalidConfigurationError {
+    description: String,
+}
+
+impl InvalidConfigurationError {
+    pub fn new(desc: &str) -> Self {
+        InvalidConfigurationError {
+            description: String::from(desc),
+        }
+    }
+}
+
+impl fmt::Display for InvalidConfigurationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.description)
+    }
+}

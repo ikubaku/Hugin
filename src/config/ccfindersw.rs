@@ -7,25 +7,7 @@ use std::str::FromStr;
 use log::error;
 
 use crate::config::{CloneDetectorKind, Config};
-
-#[derive(Debug)]
-pub struct InvalidConfigurationError {
-    description: String,
-}
-
-impl InvalidConfigurationError {
-    pub fn new(desc: &str) -> Self {
-        InvalidConfigurationError {
-            description: String::from(desc),
-        }
-    }
-}
-
-impl fmt::Display for InvalidConfigurationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description)
-    }
-}
+use crate::error::InvalidConfigurationError;
 
 #[derive(Debug, PartialEq)]
 pub enum Languages {
