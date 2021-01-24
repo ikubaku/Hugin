@@ -74,3 +74,14 @@ impl fmt::Display for RunnerProcessFailedError {
 }
 
 impl Error for RunnerProcessFailedError {}
+
+#[derive(Debug)]
+pub struct InvalidCCFinderSWResult;
+
+impl fmt::Display for InvalidCCFinderSWResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "The result is in invalid format.")
+    }
+}
+
+impl Error for InvalidCCFinderSWResult {}

@@ -12,6 +12,8 @@ use zip::read::ZipFile;
 use zip::result::ZipError;
 use zip::ZipArchive;
 
+mod parser;
+
 use crate::clone_pair::ClonePair;
 use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::error::{InvalidPathError, RunnerProcessFailedError};
