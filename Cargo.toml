@@ -15,3 +15,6 @@ toml = "0.5"
 serde = "1.0"
 serde_derive = "1.0"
 semver = { version = "0.11", features = [ "serde" ] }
+tempfile = "3.2"
+zip = "0.5"
+shellexpand = "2.1"

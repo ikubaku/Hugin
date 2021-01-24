@@ -55,11 +55,11 @@ pub struct CCFinderSWConfig {
 }
 
 impl CCFinderSWConfig {
-    pub fn try_from_config(config: Config) -> Option<Self> {
+    pub fn try_from_config(config: &Config) -> Option<Self> {
         if config.clone_detector_kind != CloneDetectorKind::CCFinderSW {
             None
         } else {
-            match CCFinderSWConfig::from_hashmap(config.clone_detector_config) {
+            match CCFinderSWConfig::from_hashmap(&config.clone_detector_config) {
                 Ok(c) => Some(c),
                 Err(e) => {
                     error!("Invalid configuration: {:?}", e);
@@ -93,7 +93,7 @@ impl CCFinderSWConfig {
         .collect()
     }
 
-    fn from_hashmap(hashmap: HashMap<String, String>) -> Result<Self, InvalidConfigurationError> {
+    fn from_hashmap(hashmap: &HashMap<String, String>) -> Result<Self, InvalidConfigurationError> {
         let executable_path = PathBuf::from(hashmap.get("executable_path").ok_or(
             InvalidConfigurationError::new("Missing key: `executable_path`"),
         )?);

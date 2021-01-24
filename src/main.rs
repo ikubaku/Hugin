@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::str::FromStr;
 
 use clap::clap_app;
@@ -12,12 +12,17 @@ mod config;
 mod error;
 mod job;
 mod session;
+mod runner;
+mod clone_pair;
 
 use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::config::Config;
 use crate::error::NoValidConfigurationError;
 use crate::job::Job;
 use crate::session::Session;
+use crate::runner::ccfindersw::CCFinderSWRunner;
+use crate::runner::Runner;
+use crate::clone_pair::ClonePair;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Parse options
@@ -77,13 +82,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         file.read_to_string(&mut contents)?;
         config = Some(toml::from_str(contents.as_str())?);
         println!(
-            "Munin database directory: {}",
-            config
+            "Munin database directory: {}", shellexpand::tilde(
+                config
                 .clone()
                 .unwrap()
                 .munin_database_root
                 .to_str()
                 .unwrap()
+            )
         );
     } else {
         info!("Using the default configuration.");
@@ -129,13 +135,40 @@ fn main() -> Result<(), Box<dyn Error>> {
     match config {
         None => {
             let config = Config::default();
+            let ccfindersw_config = CCFinderSWConfig::try_from_config(&config).unwrap();
+
+            let project_path = session_path.join(&session.project_path);
+            let runner = CCFinderSWRunner::create(ccfindersw_config, &project_path, &Path::new(shellexpand::tilde(&config.munin_database_root.to_str().unwrap()).as_ref()));
+            for j in jobs {
+                match runner.run_job(j) {
+                    Ok(res) => {
+                        info!("Result: {:?}", res);
+                    }
+                    Err(e) => {
+                        error!("Job failed with error: {:?}", e);
+                    }
+                }
+            }
         }
         Some(config) => {
-            let ccfindersw_config = CCFinderSWConfig::try_from_config(config).ok_or_else(|| {
+            let ccfindersw_config = CCFinderSWConfig::try_from_config(&config).ok_or_else(|| {
                 error!("No valid configuration.");
                 NoValidConfigurationError
             })?;
             println!("CCFinderSW configuration: {:?}", ccfindersw_config);
+
+            let project_path = session_path.canonicalize()?.join(&session.project_path);
+            let runner = CCFinderSWRunner::create(ccfindersw_config, &project_path, &Path::new(shellexpand::tilde(&config.munin_database_root.to_str().unwrap()).as_ref()));
+            for j in jobs {
+                match runner.run_job(j) {
+                    Ok(res) => {
+                        info!("Result: {:?}", res);
+                    }
+                    Err(e) => {
+                        error!("Job failed with error: {:?}", e);
+                    }
+                }
+            }
         }
     }
 

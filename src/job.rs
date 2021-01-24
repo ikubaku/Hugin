@@ -5,19 +5,20 @@ use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct SourceInfo {
-    location: PathBuf,
+    pub(crate) location: PathBuf,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct LibraryInfo {
     name: String,
     version: Version,
-    location: PathBuf,
+    pub(crate) location: PathBuf,
+    pub(crate) archive_root: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Job {
-    project: SourceInfo,
-    example_sketch: SourceInfo,
-    library_info: LibraryInfo,
+    pub(crate) project: SourceInfo,
+    pub(crate) example_sketch: SourceInfo,
+    pub(crate) library_info: LibraryInfo,
 }
