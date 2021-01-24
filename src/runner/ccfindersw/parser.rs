@@ -3,19 +3,19 @@ use std::error::Error;
 use nom::branch::alt;
 use nom::bytes::streaming::{is_not, take_while_m_n};
 use nom::character::streaming::{char, multispace1};
-use nom::combinator::{map, map_opt, map_res, value, verify, not, eof, peek};
+use nom::combinator::{eof, map, map_opt, map_res, not, peek, value, verify};
 use nom::error::{FromExternalError, ParseError};
-use nom::multi::{fold_many0, many1, many0};
+use nom::multi::{fold_many0, many0, many1};
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
 use crate::clone_pair::{ClonePair, CodePosition};
-use nom::bytes::complete::{take_while, take_until};
-use nom::character::is_digit;
-use nom::character::complete::{digit1, multispace0, not_line_ending, line_ending};
-use nom::lib::std::collections::HashMap;
-use nom::bytes::complete::tag;
 use crate::error::InvalidCCFinderSWResult;
+use nom::bytes::complete::tag;
+use nom::bytes::complete::{take_until, take_while};
+use nom::character::complete::{digit1, line_ending, multispace0, not_line_ending};
+use nom::character::is_digit;
+use nom::lib::std::collections::HashMap;
 use toml::from_str;
 
 enum DataBlock {
@@ -33,7 +33,12 @@ struct SetElement {
 }
 
 impl SetElement {
-    pub fn new(file_number: (u32, u32), start_position: CodePosition, end_position: CodePosition, lnr: u32) -> Self {
+    pub fn new(
+        file_number: (u32, u32),
+        start_position: CodePosition,
+        end_position: CodePosition,
+        lnr: u32,
+    ) -> Self {
         SetElement {
             file_number,
             start_position,
@@ -50,9 +55,7 @@ struct CloneSet {
 
 impl CloneSet {
     pub fn new(elements: Vec<SetElement>) -> Self {
-        CloneSet {
-            elements,
-        }
+        CloneSet { elements }
     }
 }
 
@@ -75,71 +78,88 @@ struct ResultParser {}
 
 impl ResultParser {
     fn parse_digits<'a, E>(&self, input: &'a str) -> IResult<&'a str, u32, E>
-    where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
-        map_res(preceded(|i| self.parse_preceding_whitespace(i), digit1), move |val| u32::from_str_radix(val, 10))(input)
+        map_res(
+            preceded(|i| self.parse_preceding_whitespace(i), digit1),
+            move |val| u32::from_str_radix(val, 10),
+        )(input)
     }
 
     fn parse_string<'a, E>(&self, input: &'a str) -> IResult<&'a str, String, E>
-    where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
-        let string_parser = delimited(|i| self.parse_preceding_whitespace(i), not_line_ending, line_ending);
+        let string_parser = delimited(
+            |i| self.parse_preceding_whitespace(i),
+            not_line_ending,
+            line_ending,
+        );
         map_res(string_parser, move |val| Ok(String::from(val)))(input)
     }
 
     fn parse_preceding_whitespace<'a, E>(&self, input: &'a str) -> IResult<&'a str, (), E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
-        let preceding_whitespace_parser = tuple((
-            peek(not(preceded(multispace0, eof))),
-            multispace0
-            ));
+        let preceding_whitespace_parser =
+            tuple((peek(not(preceded(multispace0, eof))), multispace0));
         map_res(preceding_whitespace_parser, |_| Ok(()))(input)
     }
 
     fn parse_columns<'a, E>(&self, input: &'a str) -> IResult<&'a str, u32, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         self.parse_digits(input)
     }
 
     fn parse_lnr<'a, E>(&self, input: &'a str) -> IResult<&'a str, u32, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         self.parse_digits(input)
     }
 
     fn parse_tokens<'a, E>(&self, input: &'a str) -> IResult<&'a str, u32, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         self.parse_digits(input)
     }
 
     fn parse_lines<'a, E>(&self, input: &'a str) -> IResult<&'a str, u32, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         self.parse_digits(input)
     }
 
     fn parse_filename<'a, E>(&self, input: &'a str) -> IResult<&'a str, String, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         self.parse_string(input)
     }
 
     fn parse_position<'a, E>(&self, input: &'a str) -> IResult<&'a str, CodePosition, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         let position_parser = tuple((
             |i| self.parse_digits(i),
             preceded(char(','), |i| self.parse_digits(i)),
             preceded(char(','), |i| self.parse_digits(i)),
         ));
-        map_res(position_parser, move |val: (u32, u32, u32)| Ok(CodePosition::new(val.0, val.1)))(input)
+        map_res(position_parser, move |val: (u32, u32, u32)| {
+            Ok(CodePosition::new(val.0, val.1))
+        })(input)
     }
 
     fn parse_file_number<'a, E>(&self, input: &'a str) -> IResult<&'a str, (u32, u32), E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         let position_parser = tuple((
             |i| self.parse_digits(i),
@@ -149,39 +169,46 @@ impl ResultParser {
     }
 
     fn parse_set_element<'a, E>(&self, input: &'a str) -> IResult<&'a str, SetElement, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
-        let set_element_parser = preceded(|i| self.parse_preceding_whitespace(i),
-        tuple((
-            |i| self.parse_file_number(i),
-            |i| self.parse_position(i),
-            |i| self.parse_position(i),
-            |i| self.parse_lnr(i),
-            ))
+        let set_element_parser = preceded(
+            |i| self.parse_preceding_whitespace(i),
+            tuple((
+                |i| self.parse_file_number(i),
+                |i| self.parse_position(i),
+                |i| self.parse_position(i),
+                |i| self.parse_lnr(i),
+            )),
         );
-        map_res(set_element_parser, move |val: ((u32, u32), CodePosition, CodePosition, u32)|
-            Ok(SetElement::new(val.0, val.1, val.2, val.3))
+        map_res(
+            set_element_parser,
+            move |val: ((u32, u32), CodePosition, CodePosition, u32)| {
+                Ok(SetElement::new(val.0, val.1, val.2, val.3))
+            },
         )(input)
     }
 
     fn parse_set<'a, E>(&self, input: &'a str) -> IResult<&'a str, Vec<SetElement>, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         let set_parser = delimited(
             preceded(|i| self.parse_preceding_whitespace(i), tag("#begin{set}")),
             many1(|i| self.parse_set_element(i)),
-            preceded(|i| self.parse_preceding_whitespace(i), tag("#end{set}"))
+            preceded(|i| self.parse_preceding_whitespace(i), tag("#end{set}")),
         );
         map_res(set_parser, move |val: Vec<SetElement>| Ok(val))(input)
     }
 
     fn parse_clone<'a, E>(&self, input: &'a str) -> IResult<&'a str, Vec<CloneSet>, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         let clone_parser = delimited(
             preceded(|i| self.parse_preceding_whitespace(i), tag("#begin{clone}")),
             many1(|i| self.parse_set(i)),
-            preceded(|i| self.parse_preceding_whitespace(i), tag("#end{clone}"))
+            preceded(|i| self.parse_preceding_whitespace(i), tag("#end{clone}")),
         );
         map_res(clone_parser, move |val: Vec<Vec<SetElement>>| {
             let mut res = Vec::new();
@@ -192,70 +219,97 @@ impl ResultParser {
         })(input)
     }
 
-    fn parse_file_description_entry<'a, E>(&self, input: &'a str) -> IResult<&'a str, ((u32, u32), String), E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    fn parse_file_description_entry<'a, E>(
+        &self,
+        input: &'a str,
+    ) -> IResult<&'a str, ((u32, u32), String), E>
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
-        let file_description_entry_parser = preceded(|i| self.parse_preceding_whitespace(i),
-        tuple((
-            |i| self.parse_file_number(i),
-            |i| self.parse_lines(i),
-            |i| self.parse_tokens(i),
-            |i| self.parse_filename(i),
-            ))
+        let file_description_entry_parser = preceded(
+            |i| self.parse_preceding_whitespace(i),
+            tuple((
+                |i| self.parse_file_number(i),
+                |i| self.parse_lines(i),
+                |i| self.parse_tokens(i),
+                |i| self.parse_filename(i),
+            )),
         );
-        map_res(file_description_entry_parser, move |val: ((u32, u32), u32, u32, String)| Ok((val.0, val.3)))(input)
+        map_res(
+            file_description_entry_parser,
+            move |val: ((u32, u32), u32, u32, String)| Ok((val.0, val.3)),
+        )(input)
     }
 
-    fn parse_file_description<'a, E>(&self, input: &'a str) -> IResult<&'a str, HashMap<(u32, u32), String>, E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    fn parse_file_description<'a, E>(
+        &self,
+        input: &'a str,
+    ) -> IResult<&'a str, HashMap<(u32, u32), String>, E>
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         let file_description_parser = delimited(
-            preceded(|i| self.parse_preceding_whitespace(i), tag("#begin{file description}")),
+            preceded(
+                |i| self.parse_preceding_whitespace(i),
+                tag("#begin{file description}"),
+            ),
             many1(|i| self.parse_file_description_entry(i)),
-            preceded(|i| self.parse_preceding_whitespace(i), tag("#end{file description}")),
+            preceded(
+                |i| self.parse_preceding_whitespace(i),
+                tag("#end{file description}"),
+            ),
         );
 
-        map_res(file_description_parser, move |val: Vec<((u32, u32), String)>| {
-            let mut res = HashMap::<(u32, u32), String>::new();
-            for e in val {
-                res.insert(e.0, e.1);
-            }
-            Ok(res)
-        })(input)
+        map_res(
+            file_description_parser,
+            move |val: Vec<((u32, u32), String)>| {
+                let mut res = HashMap::<(u32, u32), String>::new();
+                for e in val {
+                    res.insert(e.0, e.1);
+                }
+                Ok(res)
+            },
+        )(input)
     }
 
     fn parse_block<'a, E>(&self, input: &'a str) -> IResult<&'a str, (), E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         let block_parser = delimited(
             preceded(|i| self.parse_preceding_whitespace(i), tag("#begin{")),
             take_until("#end{"),
-            not_line_ending
+            not_line_ending,
         );
         map_res(block_parser, move |_| Ok(()))(input)
     }
 
     fn parse_tag<'a, E>(&self, input: &'a str) -> IResult<&'a str, (), E>
-        where E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
+    where
+        E: ParseError<&'a str> + FromExternalError<&'a str, std::num::ParseIntError>,
     {
         let tag_parser = preceded(
             preceded(|i| self.parse_preceding_whitespace(i), char('#')),
-                                  not_line_ending);
+            not_line_ending,
+        );
         map_res(tag_parser, move |_| Ok(()))(input)
     }
 
     pub fn parse_result<'a, E>(&self, input: &'a str) -> IResult<&'a str, ParsedResult, E>
-    where E: ParseError<&'a str>
-    + FromExternalError<&'a str, std::num::ParseIntError>
-    + FromExternalError<&'a str, InvalidCCFinderSWResult>
+    where
+        E: ParseError<&'a str>
+            + FromExternalError<&'a str, std::num::ParseIntError>
+            + FromExternalError<&'a str, InvalidCCFinderSWResult>,
     {
         let result_parser = many1(alt((
-                map(|i| self.parse_file_description(i), move |d| DataBlock::FileDescription(d)),
-                map(|i| self.parse_clone(i), move |c| DataBlock::Clone(c)),
-                map(|i| self.parse_block(i), |_| DataBlock::Unknown),
-                map(|i| self.parse_tag(i), |_| DataBlock::Unknown),
-            ))
-        );
+            map(
+                |i| self.parse_file_description(i),
+                move |d| DataBlock::FileDescription(d),
+            ),
+            map(|i| self.parse_clone(i), move |c| DataBlock::Clone(c)),
+            map(|i| self.parse_block(i), |_| DataBlock::Unknown),
+            map(|i| self.parse_tag(i), |_| DataBlock::Unknown),
+        )));
         map_res(result_parser, |blocks| {
             let mut file_description: Option<HashMap<(u32, u32), String>> = None;
             let mut clone: Option<Vec<CloneSet>> = None;
@@ -293,8 +347,8 @@ impl ResultParser {
 
 #[cfg(test)]
 mod test {
-    use crate::runner::ccfindersw::parser::{ResultParser, ParsedResult, CloneSet, SetElement};
-    use crate::clone_pair::{ClonePair, CodeSlice, CodePosition};
+    use crate::clone_pair::{ClonePair, CodePosition, CodeSlice};
+    use crate::runner::ccfindersw::parser::{CloneSet, ParsedResult, ResultParser, SetElement};
     use nom::lib::std::collections::HashMap;
 
     #[test]
@@ -398,7 +452,12 @@ mod test {
             return;
         }
         let (_left, res) = res.unwrap();
-        let expected = SetElement::new((0, 0), CodePosition::new(20, 40), CodePosition::new(30, 0), 81);
+        let expected = SetElement::new(
+            (0, 0),
+            CodePosition::new(20, 40),
+            CodePosition::new(30, 0),
+            81,
+        );
         assert_eq!(res, expected);
     }
 
@@ -417,8 +476,18 @@ mod test {
         }
         let (_left, res) = res.unwrap();
         let expected = vec![
-            SetElement::new((0, 0), CodePosition::new(20, 40), CodePosition::new(30, 0), 81),
-            SetElement::new((0, 1), CodePosition::new(130, 40), CodePosition::new(141, 4), 81),
+            SetElement::new(
+                (0, 0),
+                CodePosition::new(20, 40),
+                CodePosition::new(30, 0),
+                81,
+            ),
+            SetElement::new(
+                (0, 1),
+                CodePosition::new(130, 40),
+                CodePosition::new(141, 4),
+                81,
+            ),
         ];
         assert_eq!(res, expected);
     }
@@ -444,13 +513,33 @@ mod test {
         }
         let (_left, res) = res.unwrap();
         let expected = vec![
-            SetElement::new((0, 0), CodePosition::new(20, 40), CodePosition::new(30, 0), 81),
-            SetElement::new((0, 1), CodePosition::new(130, 40), CodePosition::new(141, 4), 81),
+            SetElement::new(
+                (0, 0),
+                CodePosition::new(20, 40),
+                CodePosition::new(30, 0),
+                81,
+            ),
+            SetElement::new(
+                (0, 1),
+                CodePosition::new(130, 40),
+                CodePosition::new(141, 4),
+                81,
+            ),
         ];
         assert_eq!(res[0].elements, expected);
         let expected = vec![
-            SetElement::new((0, 0), CodePosition::new(50, 0), CodePosition::new(60, 86), 81),
-            SetElement::new((0, 1), CodePosition::new(10, 2), CodePosition::new(23, 10), 81),
+            SetElement::new(
+                (0, 0),
+                CodePosition::new(50, 0),
+                CodePosition::new(60, 86),
+                81,
+            ),
+            SetElement::new(
+                (0, 1),
+                CodePosition::new(10, 2),
+                CodePosition::new(23, 10),
+                81,
+            ),
         ];
         assert_eq!(res[1].elements, expected);
     }
@@ -470,9 +559,15 @@ mod test {
         }
         let (_left, res) = res.unwrap();
         assert!(res.contains_key(&(0 as u32, 0 as u32)));
-        assert_eq!(res.get(&(0 as u32, 0 as u32)).unwrap(), "/tmp/.foo/src/Example.ino");
+        assert_eq!(
+            res.get(&(0 as u32, 0 as u32)).unwrap(),
+            "/tmp/.foo/src/Example.ino"
+        );
         assert!(res.contains_key(&(0 as u32, 1 as u32)));
-        assert_eq!(res.get(&(0 as u32, 1 as u32)).unwrap(), "/tmp/.foo/src/MyProject.ino");
+        assert_eq!(
+            res.get(&(0 as u32, 1 as u32)).unwrap(),
+            "/tmp/.foo/src/MyProject.ino"
+        );
     }
 
     #[test]
@@ -546,13 +641,29 @@ mod test {
         let expected = ParsedResult::new(
             [
                 ((0, 0), String::from("/tmp/.foo/src/Example.ino")),
-                ((0, 1), String::from("/tmp/.foo/src/MyProject.ino"))
-            ].iter().cloned().collect(),
-            [CloneSet::new([
-                SetElement::new((0, 0), CodePosition::new(20, 40), CodePosition::new(30, 0), 81),
-                SetElement::new((0, 1), CodePosition::new(130, 40), CodePosition::new(141, 4), 81)
-                ].to_vec()
-            )].to_vec()
+                ((0, 1), String::from("/tmp/.foo/src/MyProject.ino")),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
+            [CloneSet::new(
+                [
+                    SetElement::new(
+                        (0, 0),
+                        CodePosition::new(20, 40),
+                        CodePosition::new(30, 0),
+                        81,
+                    ),
+                    SetElement::new(
+                        (0, 1),
+                        CodePosition::new(130, 40),
+                        CodePosition::new(141, 4),
+                        81,
+                    ),
+                ]
+                .to_vec(),
+            )]
+            .to_vec(),
         );
         assert_eq!(res, expected);
     }

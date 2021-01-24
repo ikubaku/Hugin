@@ -6,10 +6,7 @@ pub struct CodePosition {
 
 impl CodePosition {
     pub fn new(lines: u32, columns: u32) -> Self {
-        CodePosition {
-            lines,
-            columns,
-        }
+        CodePosition { lines, columns }
     }
 }
 
@@ -21,10 +18,7 @@ pub struct CodeSlice {
 
 impl CodeSlice {
     pub fn new(start: CodePosition, end: CodePosition) -> Self {
-        CodeSlice {
-            start,
-            end,
-        }
+        CodeSlice { start, end }
     }
 }
 
@@ -38,7 +32,7 @@ impl ClonePair {
     pub fn new(project: CodeSlice, example_sketch: CodeSlice) -> Self {
         ClonePair {
             project,
-            example_sketch
+            example_sketch,
         }
     }
 }
