@@ -83,14 +83,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         config = Some(toml::from_str(contents.as_str())?);
         println!(
             "Munin database directory: {}",
-            shellexpand::tilde(
-                config
-                    .clone()
-                    .unwrap()
-                    .munin_database_root
-                    .to_str()
-                    .unwrap()
-            )
+            config.clone().unwrap().get_absolute_database_root_path()?.to_str().unwrap(),
         );
     } else {
         info!("Using the default configuration.");
@@ -111,20 +104,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         session = toml::from_str(contents.as_str())?;
         info!(
             "The project path is: {}",
-            session.project_path.to_str().unwrap()
+            session.get_absolute_project_path(&session_path)?.to_str().unwrap(),
         );
-        info!("The jobs path is: {}", session.jobs_path.to_str().unwrap());
+        info!("The jobs path is: {}", session.get_absolute_jobs_path(&session_path)?.to_str().unwrap());
     }
 
     // Load jobs
     let mut jobs = Vec::new();
-    for job_file in session_path
-        .canonicalize()?
-        .join(session.jobs_path.as_path())
-        .read_dir()?
+    for job_file in session.get_absolute_jobs_path(&session_path)?.read_dir()?
     {
         debug!("job_file: {:?}", job_file);
-        let path = session.jobs_path.join(job_file?.path());
+        let path = session.get_absolute_jobs_path(&session_path)?.join(job_file?.path());
         let mut file = File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
@@ -138,13 +128,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             let config = Config::default();
             let ccfindersw_config = CCFinderSWConfig::try_from_config(&config).unwrap();
 
-            let project_path = session_path.join(&session.project_path);
+            let project_path = session.get_absolute_project_path(&session_path)?;
             let runner = CCFinderSWRunner::create(
                 ccfindersw_config,
                 &project_path,
-                &Path::new(
-                    shellexpand::tilde(&config.munin_database_root.to_str().unwrap()).as_ref(),
-                ),
+                &config.get_absolute_database_root_path()?,
             );
             for j in jobs {
                 match runner.run_job(j) {
@@ -165,13 +153,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 })?;
             println!("CCFinderSW configuration: {:?}", ccfindersw_config);
 
-            let project_path = session_path.canonicalize()?.join(&session.project_path);
+            let project_path = session.get_absolute_project_path(&session_path)?;
             let runner = CCFinderSWRunner::create(
                 ccfindersw_config,
                 &project_path,
-                &Path::new(
-                    shellexpand::tilde(&config.munin_database_root.to_str().unwrap()).as_ref(),
-                ),
+                &config.get_absolute_database_root_path()?,
             );
             for j in jobs {
                 match runner.run_job(j) {

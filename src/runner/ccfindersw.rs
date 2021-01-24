@@ -36,40 +36,18 @@ impl CCFinderSWRunner {
 impl Runner for CCFinderSWRunner {
     fn run_job(&self, job: Job) -> Result<Vec<ClonePair>, Box<dyn Error>> {
         warn!("Some functionalities are not yet implemented!");
-        let project_source_name = job
-            .project
-            .location
-            .file_name()
-            .ok_or(InvalidPathError::new(
-                job.project.location.to_str().unwrap(),
-            ))?
-            .to_str()
-            .unwrap();
-        let example_source_name = job
-            .example_sketch
-            .location
-            .file_name()
-            .ok_or(InvalidPathError::new(
-                job.example_sketch.location.to_str().unwrap(),
-            ))?
-            .to_str()
-            .unwrap();
+        let project_source_name = job.project.get_file_name()?;
+        let example_source_name = job.example_sketch.get_file_name()?;
         let library_info = job.library_info;
-        let library_archive_path = self.database_path.join(library_info.location.clone());
+        let library_archive_path = library_info.get_absolute_location(&self.database_path)?;
 
         let working_dir = tempfile::tempdir()?;
         let sources_path = working_dir.path().join("src");
         fs::create_dir(&sources_path)?;
 
-        debug!(
-            "Copying the project source file...: {}",
-            self.project_path
-                .join(job.project.location.clone())
-                .to_str()
-                .unwrap()
-        );
+        debug!("Copying the project source file...: {}", job.project.get_location_from(&self.project_path)?.to_str().unwrap());
         fs::copy(
-            self.project_path.join(job.project.location.clone()),
+            job.project.get_location_from(&self.project_path)?,
             sources_path.join(project_source_name),
         )?;
 
@@ -81,18 +59,21 @@ impl Runner for CCFinderSWRunner {
             );
             let library_zip = File::open(library_archive_path)?;
             let mut library_archive = ZipArchive::new(library_zip)?;
-            let mut file = match library_archive.by_name(
-                Path::new(library_info.archive_root.as_str())
+            debug!("Searching the source file: {}", job.example_sketch.get_non_canonical_path_from(
+                &Path::new(library_info.archive_root.as_str())
                     .join("examples")
-                    .join(job.example_sketch.location.clone())
-                    .to_str()
-                    .unwrap(),
+            ).to_str().unwrap());
+            let mut file = match library_archive.by_name(
+                job.example_sketch.get_non_canonical_path_from(
+                    &Path::new(library_info.archive_root.as_str())
+                    .join("examples")
+                ).to_str().unwrap()
             ) {
                 Ok(f) => f,
                 Err(e) => {
                     error!(
                         "Could not open an example sketch source: {}",
-                        job.example_sketch.location.to_str().unwrap()
+                        job.example_sketch.get_non_canonical_path_from(&Path::new("")).to_str().unwrap()
                     );
                     return Err(e.into());
                 }
