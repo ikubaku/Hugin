@@ -123,7 +123,7 @@ impl Runner for CCFinderSWRunner {
             if status.success() {
                 let mut file = File::open(&working_dir.path().join("result.txt"))?;
                 let mut contents = String::new();
-                file.read_to_string(&mut contents);
+                file.read_to_string(&mut contents)?;
                 debug!("Result from the detector: {}", contents);
             } else {
                 return Err(RunnerProcessFailedError::new(status.code().unwrap()).into());
