@@ -40,7 +40,7 @@ fn serialize_language(l: &Languages) -> String {
 
 fn deserialize_language(s: &str) -> Result<Languages, ()> {
     if s == "CPlusPlus" {
-        return Ok(Languages::CPlusPlus);
+        Ok(Languages::CPlusPlus)
     } else {
         Err(())
     }

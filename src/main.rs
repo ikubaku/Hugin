@@ -1,9 +1,10 @@
 use std::error::Error;
 use std::fs::File;
+use std::io::Read;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use clap::clap_app;
-
 use flexi_logger::{Duplicate, LevelFilter, LogSpecBuilder, LogSpecification, Logger};
 use log::{debug, error, info, trace, warn};
 
@@ -13,12 +14,10 @@ mod job;
 mod session;
 
 use crate::config::ccfindersw::CCFinderSWConfig;
+use crate::config::Config;
 use crate::error::NoValidConfigurationError;
 use crate::job::Job;
 use crate::session::Session;
-use config::Config;
-use std::io::Read;
-use std::str::FromStr;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Parse options
