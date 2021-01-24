@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::fmt;
-use std::iter::FromIterator;
 use std::path::PathBuf;
 use std::str::FromStr;
 

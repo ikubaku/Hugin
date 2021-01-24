@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::path::Path;
 
 use crate::clone_pair::ClonePair;
 use crate::job::Job;

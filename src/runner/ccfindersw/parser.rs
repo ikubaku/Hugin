@@ -1,22 +1,17 @@
-use std::error::Error;
-
 use nom::branch::alt;
-use nom::bytes::streaming::{is_not, take_while_m_n};
-use nom::character::streaming::{char, multispace1};
-use nom::combinator::{eof, map, map_opt, map_res, not, peek, value, verify};
+use nom::character::streaming::char;
+use nom::combinator::{eof, map, map_res, not, peek};
 use nom::error::{FromExternalError, ParseError};
-use nom::multi::{fold_many0, many0, many1};
+use nom::multi::many1;
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
-use crate::clone_pair::{ClonePair, CodePosition};
+use crate::clone_pair::CodePosition;
 use crate::error::InvalidCCFinderSWResult;
 use nom::bytes::complete::tag;
-use nom::bytes::complete::{take_until, take_while};
+use nom::bytes::complete::take_until;
 use nom::character::complete::{digit1, line_ending, multispace0, not_line_ending};
-use nom::character::is_digit;
 use nom::lib::std::collections::HashMap;
-use toml::from_str;
 
 enum DataBlock {
     FileDescription(HashMap<(u32, u32), String>),

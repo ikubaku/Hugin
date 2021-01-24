@@ -1,14 +1,14 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use clap::clap_app;
 
 use flexi_logger::{Duplicate, LevelFilter, LogSpecBuilder, LogSpecification, Logger};
 
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 
 mod clone_pair;
 mod config;
@@ -17,7 +17,6 @@ mod job;
 mod runner;
 mod session;
 
-use crate::clone_pair::ClonePair;
 use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::config::Config;
 use crate::error::NoValidConfigurationError;

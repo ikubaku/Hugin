@@ -6,20 +6,17 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 
-use zip::read::ZipFile;
-use zip::result::ZipError;
 use zip::ZipArchive;
 
 mod parser;
 
 use crate::clone_pair::ClonePair;
 use crate::config::ccfindersw::CCFinderSWConfig;
-use crate::error::{InvalidPathError, RunnerProcessFailedError};
+use crate::error::RunnerProcessFailedError;
 use crate::job::Job;
 use crate::runner::Runner;
-use crate::session::Session;
 
 pub struct CCFinderSWRunner {
     project_path: PathBuf,
