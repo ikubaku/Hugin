@@ -1,17 +1,15 @@
 use nom::branch::alt;
-use nom::character::streaming::char;
+use nom::bytes::complete::{tag, take_until};
+use nom::character::complete::{char, digit1, line_ending, multispace0, not_line_ending};
 use nom::combinator::{eof, map, map_res, not, peek};
 use nom::error::{FromExternalError, ParseError};
+use nom::lib::std::collections::HashMap;
 use nom::multi::many1;
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
 use crate::clone_pair::CodePosition;
 use crate::error::InvalidCCFinderSWResult;
-use nom::bytes::complete::tag;
-use nom::bytes::complete::take_until;
-use nom::character::complete::{digit1, line_ending, multispace0, not_line_ending};
-use nom::lib::std::collections::HashMap;
 
 enum DataBlock {
     FileDescription(HashMap<(u32, u32), String>),
