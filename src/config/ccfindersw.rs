@@ -118,4 +118,18 @@ impl CCFinderSWConfig {
     pub fn get_executable_path_as_string(&self) -> String {
         String::from(self.executable_path.to_str().unwrap())
     }
+
+    pub fn token_length_to_option_value(&self) -> String {
+        self.token_length.to_string()
+    }
+
+    pub fn language_to_option_value(&self) -> String {
+        match self.language {
+            Languages::CPlusPlus => String::from("cpp"),
+        }
+    }
+
+    pub fn extensions_to_option_value(&self) -> String {
+        self.extensions.join("|")
+    }
 }

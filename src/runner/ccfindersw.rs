@@ -103,8 +103,14 @@ impl Runner for CCFinderSWRunner {
             let status = Command::new(self.config.get_executable_path_as_string())
                 .current_dir(&working_dir)
                 .args(&[
-                    "D", "-d", "src", "-l", "cpp", "-o", "result", "-t", "50", "-w", "2", "-antlr",
-                    "ino|pde", "-charset", "auto",
+                    "D",
+                    "-d", "src",
+                    "-l", &self.config.language_to_option_value(),
+                    "-o", "result",
+                    "-t", &self.config.token_length_to_option_value(),
+                    "-w", "2",
+                    "-antlr", &self.config.extensions_to_option_value(),
+                    "-charset", "auto",
                 ])
                 .spawn()?
                 .wait()?;
