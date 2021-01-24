@@ -104,13 +104,20 @@ impl Runner for CCFinderSWRunner {
                 .current_dir(&working_dir)
                 .args(&[
                     "D",
-                    "-d", "src",
-                    "-l", &self.config.language_to_option_value(),
-                    "-o", "result",
-                    "-t", &self.config.token_length_to_option_value(),
-                    "-w", "2",
-                    "-antlr", &self.config.extensions_to_option_value(),
-                    "-charset", "auto",
+                    "-d",
+                    "src",
+                    "-l",
+                    &self.config.language_to_option_value(),
+                    "-o",
+                    "result",
+                    "-t",
+                    &self.config.token_length_to_option_value(),
+                    "-w",
+                    "2",
+                    "-antlr",
+                    &self.config.extensions_to_option_value(),
+                    "-charset",
+                    "auto",
                 ])
                 .spawn()?
                 .wait()?;
