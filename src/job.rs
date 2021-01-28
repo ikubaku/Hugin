@@ -61,9 +61,16 @@ pub struct Job {
 
 impl Job {
     pub fn create_result(&self, pairs: Vec<ClonePair>) -> JobResult {
-        JobResult {
-            job: self.clone(),
-            clone_pairs: pairs,
+        if pairs.is_empty() {
+            JobResult {
+                job: self.clone(),
+                clone_pairs: None,
+            }
+        } else {
+            JobResult {
+                    job: self.clone(),
+                    clone_pairs: Some(pairs),
+            }
         }
     }
 }
@@ -71,5 +78,5 @@ impl Job {
 #[derive(Serialize)]
 pub struct JobResult {
     job: Job,
-    clone_pairs: Vec<ClonePair>,
+    clone_pairs: Option<Vec<ClonePair>>,
 }
