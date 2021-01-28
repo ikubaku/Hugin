@@ -68,8 +68,8 @@ impl Job {
             }
         } else {
             JobResult {
-                    job: self.clone(),
-                    clone_pairs: Some(pairs),
+                job: self.clone(),
+                clone_pairs: Some(pairs),
             }
         }
     }

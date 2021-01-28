@@ -9,7 +9,7 @@ use nom::character::complete::{char, digit1, line_ending, multispace0, not_line_
 use nom::combinator::{eof, map, map_res, not, peek};
 use nom::error::{FromExternalError, ParseError};
 use nom::lib::std::collections::HashMap;
-use nom::multi::{many1, many0};
+use nom::multi::{many0, many1};
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 

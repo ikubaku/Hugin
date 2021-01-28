@@ -49,7 +49,12 @@ pub struct ClonePair {
 }
 
 impl ClonePair {
-    pub fn new(project: CodeSlice, project_score: f64, example_sketch: CodeSlice, example_sketch_score: f64) -> Self {
+    pub fn new(
+        project: CodeSlice,
+        project_score: f64,
+        example_sketch: CodeSlice,
+        example_sketch_score: f64,
+    ) -> Self {
         ClonePair {
             project,
             example_sketch,
