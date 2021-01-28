@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::path::Path;
 
+use log::{debug, error, info, warn};
+
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until};
 use nom::character::complete::{char, digit1, line_ending, multispace0, not_line_ending};
@@ -80,44 +82,51 @@ impl ParsedResult {
 
     pub fn get_clone_pairs(&self, project_file_name: &str, example_source_name: &str) -> Result<Vec<ClonePair>, Box<dyn Error>> {
         let project_file_number = self.get_file_number_from_file_name(project_file_name)?;
+        debug!("project_file_number: {:?}", project_file_number);
         let example_source_file_number = self.get_file_number_from_file_name(example_source_name)?;
+        debug!("example_source_file_number: {:?}", example_source_file_number);
         let mut res = Vec::new();
         for s in &self.clone {
             let mut project_code_part = None;
             let mut example_code_part = None;
             for e in &s.elements {
+                debug!("SetElement: {:?}", e);
                 project_code_part = if e.file_number == project_file_number {
+                    debug!("Reached project_code_part set.");
                     if project_code_part.is_none() {
                         Ok(Some(CodeSlice::new(
                             e.start_position.clone(),
                             e.end_position.clone()
                         )))
                     } else {
-                        Err(InvalidCCFinderSWResult)
+                        Err(InvalidCCFinderSWResult::new("Duplicated project code part entries."))
                     }
                 } else {
-                    Ok(None)
+                    Ok(project_code_part)
                 }?;
                 example_code_part = if e.file_number == example_source_file_number {
+                    debug!("Reached example_code_part set.");
                     if example_code_part.is_none() {
                         Ok(Some(CodeSlice::new(
                             e.start_position.clone(),
                             e.end_position.clone()
                         )))
                     } else {
-                        Err(InvalidCCFinderSWResult)
+                        Err(InvalidCCFinderSWResult::new("Duplicated example code part entries."))
                     }
                 } else {
-                    Ok(None)
+                    Ok(example_code_part)
                 }?;
             }
+            debug!("project_code_part: {:?}", project_code_part);
+            debug!("example_code_part: {:?}", example_code_part);
             let new_pair = if project_code_part.is_some() && example_code_part.is_some() {
                 Ok(ClonePair::new(
                     project_code_part.unwrap(),
                     example_code_part.unwrap(),
                 ))
             } else {
-                Err(InvalidCCFinderSWResult)
+                Err(InvalidCCFinderSWResult::new("Missing mandatory code part entries."))
             }?;
             res.push(new_pair);
         }
@@ -368,14 +377,14 @@ impl ResultParser {
                 match b {
                     DataBlock::FileDescription(d) => {
                         if file_description.is_some() {
-                            return Err(InvalidCCFinderSWResult);
+                            return Err(InvalidCCFinderSWResult::new("Duplicated file description blocks."));
                         } else {
                             file_description = Some(d);
                         }
                     }
                     DataBlock::Clone(c) => {
                         if clone.is_some() {
-                            return Err(InvalidCCFinderSWResult);
+                            return Err(InvalidCCFinderSWResult::new("Duplicated clone blocks."));
                         } else {
                             clone = Some(c);
                         }
@@ -384,7 +393,7 @@ impl ResultParser {
                 }
             }
             if file_description.is_none() || clone.is_none() {
-                Err(InvalidCCFinderSWResult)
+                Err(InvalidCCFinderSWResult::new("Missing mandatory result blocks."))
             } else {
                 Ok(ParsedResult::new(file_description.unwrap(), clone.unwrap()))
             }

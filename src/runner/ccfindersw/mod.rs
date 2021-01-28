@@ -129,10 +129,10 @@ impl Runner for CCFinderSWRunner {
                 let (_, parse_result) = parser.parse_result::<()>(&contents)?;
                 let clone_pairs = parse_result.get_clone_pairs(project_source_name.as_str(), example_source_name.as_str())?;
                 debug!("pairs: {:?}", clone_pairs);
+                return Ok(clone_pairs);
             } else {
                 return Err(RunnerProcessFailedError::new(status.code().unwrap()).into());
             }
         }
-        Ok(Vec::new())
     }
 }
