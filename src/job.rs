@@ -3,10 +3,10 @@ use std::path::{Path, PathBuf};
 
 use semver::Version;
 
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
-use crate::error::InvalidPathError;
 use crate::clone_pair::ClonePair;
+use crate::error::InvalidPathError;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SourceInfo {

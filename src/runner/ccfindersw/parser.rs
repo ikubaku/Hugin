@@ -13,8 +13,8 @@ use nom::multi::many1;
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
-use crate::clone_pair::{CodePosition, ClonePair, CodeSlice};
-use crate::error::{InvalidCCFinderSWResult, FileNotFoundFromResultError};
+use crate::clone_pair::{ClonePair, CodePosition, CodeSlice};
+use crate::error::{FileNotFoundFromResultError, InvalidCCFinderSWResult};
 
 enum DataBlock {
     FileDescription(HashMap<(u32, u32), String>),
@@ -64,11 +64,14 @@ pub struct ParsedResult {
 }
 
 impl ParsedResult {
-    fn get_file_number_from_file_name(&self, file_name: &str) -> Result<(u32, u32), FileNotFoundFromResultError> {
+    fn get_file_number_from_file_name(
+        &self,
+        file_name: &str,
+    ) -> Result<(u32, u32), FileNotFoundFromResultError> {
         for (k, v) in self.file_description.iter() {
             let path = Path::new(v.as_str());
             if path.file_name().unwrap().to_str().unwrap() == file_name {
-                return Ok(k.clone())
+                return Ok(k.clone());
             }
         }
         Err(FileNotFoundFromResultError)
@@ -80,11 +83,19 @@ impl ParsedResult {
         }
     }
 
-    pub fn get_clone_pairs(&self, project_file_name: &str, example_source_name: &str) -> Result<Vec<ClonePair>, Box<dyn Error>> {
+    pub fn get_clone_pairs(
+        &self,
+        project_file_name: &str,
+        example_source_name: &str,
+    ) -> Result<Vec<ClonePair>, Box<dyn Error>> {
         let project_file_number = self.get_file_number_from_file_name(project_file_name)?;
         debug!("project_file_number: {:?}", project_file_number);
-        let example_source_file_number = self.get_file_number_from_file_name(example_source_name)?;
-        debug!("example_source_file_number: {:?}", example_source_file_number);
+        let example_source_file_number =
+            self.get_file_number_from_file_name(example_source_name)?;
+        debug!(
+            "example_source_file_number: {:?}",
+            example_source_file_number
+        );
         let mut res = Vec::new();
         for s in &self.clone {
             let mut project_code_part = None;
@@ -96,10 +107,12 @@ impl ParsedResult {
                     if project_code_part.is_none() {
                         Ok(Some(CodeSlice::new(
                             e.start_position.clone(),
-                            e.end_position.clone()
+                            e.end_position.clone(),
                         )))
                     } else {
-                        Err(InvalidCCFinderSWResult::new("Duplicated project code part entries."))
+                        Err(InvalidCCFinderSWResult::new(
+                            "Duplicated project code part entries.",
+                        ))
                     }
                 } else {
                     Ok(project_code_part)
@@ -109,10 +122,12 @@ impl ParsedResult {
                     if example_code_part.is_none() {
                         Ok(Some(CodeSlice::new(
                             e.start_position.clone(),
-                            e.end_position.clone()
+                            e.end_position.clone(),
                         )))
                     } else {
-                        Err(InvalidCCFinderSWResult::new("Duplicated example code part entries."))
+                        Err(InvalidCCFinderSWResult::new(
+                            "Duplicated example code part entries.",
+                        ))
                     }
                 } else {
                     Ok(example_code_part)
@@ -126,7 +141,9 @@ impl ParsedResult {
                     example_code_part.unwrap(),
                 ))
             } else {
-                Err(InvalidCCFinderSWResult::new("Missing mandatory code part entries."))
+                Err(InvalidCCFinderSWResult::new(
+                    "Missing mandatory code part entries.",
+                ))
             }?;
             res.push(new_pair);
         }
@@ -377,7 +394,9 @@ impl ResultParser {
                 match b {
                     DataBlock::FileDescription(d) => {
                         if file_description.is_some() {
-                            return Err(InvalidCCFinderSWResult::new("Duplicated file description blocks."));
+                            return Err(InvalidCCFinderSWResult::new(
+                                "Duplicated file description blocks.",
+                            ));
                         } else {
                             file_description = Some(d);
                         }
@@ -393,7 +412,9 @@ impl ResultParser {
                 }
             }
             if file_description.is_none() || clone.is_none() {
-                Err(InvalidCCFinderSWResult::new("Missing mandatory result blocks."))
+                Err(InvalidCCFinderSWResult::new(
+                    "Missing mandatory result blocks.",
+                ))
             } else {
                 Ok(ParsedResult::new(file_description.unwrap(), clone.unwrap()))
             }

@@ -16,8 +16,8 @@ use crate::clone_pair::ClonePair;
 use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::error::RunnerProcessFailedError;
 use crate::job::Job;
-use crate::runner::Runner;
 use crate::runner::ccfindersw::parser::ResultParser;
+use crate::runner::Runner;
 
 pub struct CCFinderSWRunner {
     project_path: PathBuf,
@@ -127,7 +127,8 @@ impl Runner for CCFinderSWRunner {
                 file.read_to_string(&mut contents)?;
                 let parser = ResultParser::new();
                 let (_, parse_result) = parser.parse_result::<()>(&contents)?;
-                let clone_pairs = parse_result.get_clone_pairs(project_source_name.as_str(), example_source_name.as_str())?;
+                let clone_pairs = parse_result
+                    .get_clone_pairs(project_source_name.as_str(), example_source_name.as_str())?;
                 debug!("pairs: {:?}", clone_pairs);
                 return Ok(clone_pairs);
             } else {
