@@ -16,6 +16,31 @@ use nom::IResult;
 use crate::clone_pair::{ClonePair, CodePosition, CodeSlice};
 use crate::error::{FileNotFoundFromResultError, InvalidCCFinderSWResult};
 
+/**
+= CCFX result generative grammar
+
+result -> others* file_description others* clone $
+
+others -> blocks | tags
+
+blocks -> "#begin{" char+ "#end{" (char|^line_ending)+
+
+tags -> "#" (char|^line_ending)+
+
+file_description -> "#begin{file description}\n" (file_number lines tokens filename "\n")+ "#end{file description}\n"
+clone -> "#begin{clone}\n" set+ "#end{clone}\n"
+set -> "#begin{set}\n" (file_number position position lnr "\n")+ "#end{set}\n"
+
+file_number -> 'digits "." 'digits
+lines -> 'digits
+tokens -> 'digits
+filename -> 'string
+position -> lines "," columns "," tokens
+lnr -> 'digits
+
+columns -> 'digits
+ */
+
 enum DataBlock {
     FileDescription(HashMap<(u32, u32), String>),
     Clone(Vec<CloneSet>),
