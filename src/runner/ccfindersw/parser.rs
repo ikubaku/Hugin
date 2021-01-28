@@ -9,7 +9,7 @@ use nom::character::complete::{char, digit1, line_ending, multispace0, not_line_
 use nom::combinator::{eof, map, map_res, not, peek};
 use nom::error::{FromExternalError, ParseError};
 use nom::lib::std::collections::HashMap;
-use nom::multi::many1;
+use nom::multi::{many1, many0};
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
@@ -28,7 +28,7 @@ blocks -> "#begin{" char+ "#end{" (char|^line_ending)+
 tags -> "#" (char|^line_ending)+
 
 file_description -> "#begin{file description}\n" (file_number lines tokens filename "\n")+ "#end{file description}\n"
-clone -> "#begin{clone}\n" set+ "#end{clone}\n"
+clone -> "#begin{clone}\n" set* "#end{clone}\n"
 set -> "#begin{set}\n" (file_number position position lnr "\n")+ "#end{set}\n"
 
 file_number -> 'digits "." 'digits
@@ -309,7 +309,7 @@ impl ResultParser {
     {
         let clone_parser = delimited(
             preceded(|i| self.parse_preceding_whitespace(i), tag("#begin{clone}")),
-            many1(|i| self.parse_set(i)),
+            many0(|i| self.parse_set(i)),
             preceded(|i| self.parse_preceding_whitespace(i), tag("#end{clone}")),
         );
         map_res(clone_parser, move |val: Vec<Vec<SetElement>>| {
