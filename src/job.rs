@@ -3,11 +3,12 @@ use std::path::{Path, PathBuf};
 
 use semver::Version;
 
-use serde_derive::Deserialize;
+use serde_derive::{Serialize, Deserialize};
 
 use crate::error::InvalidPathError;
+use crate::clone_pair::ClonePair;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SourceInfo {
     location: String,
 }
@@ -34,7 +35,7 @@ impl SourceInfo {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LibraryInfo {
     name: String,
     version: Version,
@@ -51,9 +52,24 @@ impl LibraryInfo {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Job {
     pub(crate) project: SourceInfo,
     pub(crate) example_sketch: SourceInfo,
     pub(crate) library_info: LibraryInfo,
+}
+
+impl Job {
+    pub fn create_result(&self, pairs: Vec<ClonePair>) -> JobResult {
+        JobResult {
+            job: self.clone(),
+            clone_pairs: pairs,
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub struct JobResult {
+    job: Job,
+    clone_pairs: Vec<ClonePair>,
 }

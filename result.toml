@@ -1,0 +1,27 @@
+[job.project]
+location = "big_aquatan.ino"
+
+[job.example_sketch]
+location = "GestureTest/GestureTest.ino"
+
+[job.library_info]
+name = "SparkFun APDS9960 RGB and Gesture Sensor"
+version = "1.4.2"
+location = "SparkFun APDS9960 RGB and Gesture Sensor/1.4.2/SparkFun_APDS9960_RGB_and_Gesture_Sensor-1.4.2.zip"
+archive_root = "SparkFun_APDS9960_RGB_and_Gesture_Sensor-1.4.2"
+
+[[clone_pairs]]
+[clone_pairs.project.start]
+lines = 129
+columns = 25
+
+[clone_pairs.project.end]
+lines = 140
+columns = 4
+[clone_pairs.example_sketch.start]
+lines = 73
+columns = 47
+
+[clone_pairs.example_sketch.end]
+lines = 87
+columns = 4

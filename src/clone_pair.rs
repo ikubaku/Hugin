@@ -1,4 +1,6 @@
-#[derive(Clone, Debug, PartialEq)]
+use serde_derive::Serialize;
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct CodePosition {
     lines: u32,
     columns: u32,
@@ -10,7 +12,7 @@ impl CodePosition {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct CodeSlice {
     start: CodePosition,
     end: CodePosition,
@@ -22,7 +24,7 @@ impl CodeSlice {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct ClonePair {
     project: CodeSlice,
     example_sketch: CodeSlice,
