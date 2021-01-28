@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::path::Path;
+
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until};
 use nom::character::complete::{char, digit1, line_ending, multispace0, not_line_ending};
@@ -8,8 +11,8 @@ use nom::multi::many1;
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
-use crate::clone_pair::CodePosition;
-use crate::error::InvalidCCFinderSWResult;
+use crate::clone_pair::{CodePosition, ClonePair, CodeSlice};
+use crate::error::{InvalidCCFinderSWResult, FileNotFoundFromResultError};
 
 enum DataBlock {
     FileDescription(HashMap<(u32, u32), String>),
@@ -53,21 +56,76 @@ impl CloneSet {
 }
 
 #[derive(Debug, PartialEq)]
-struct ParsedResult {
+pub struct ParsedResult {
     file_description: HashMap<(u32, u32), String>,
     clone: Vec<CloneSet>,
 }
 
 impl ParsedResult {
-    pub fn new(file_description: HashMap<(u32, u32), String>, clone: Vec<CloneSet>) -> Self {
+    fn get_file_number_from_file_name(&self, file_name: &str) -> Result<(u32, u32), FileNotFoundFromResultError> {
+        for (k, v) in self.file_description.iter() {
+            let path = Path::new(v.as_str());
+            if path.file_name().unwrap().to_str().unwrap() == file_name {
+                return Ok(k.clone())
+            }
+        }
+        Err(FileNotFoundFromResultError)
+    }
+    fn new(file_description: HashMap<(u32, u32), String>, clone: Vec<CloneSet>) -> Self {
         ParsedResult {
             file_description,
             clone,
         }
     }
+
+    pub fn get_clone_pairs(&self, project_file_name: &str, example_source_name: &str) -> Result<Vec<ClonePair>, Box<dyn Error>> {
+        let project_file_number = self.get_file_number_from_file_name(project_file_name)?;
+        let example_source_file_number = self.get_file_number_from_file_name(example_source_name)?;
+        let mut res = Vec::new();
+        for s in &self.clone {
+            let mut project_code_part = None;
+            let mut example_code_part = None;
+            for e in &s.elements {
+                project_code_part = if e.file_number == project_file_number {
+                    if project_code_part.is_none() {
+                        Ok(Some(CodeSlice::new(
+                            e.start_position.clone(),
+                            e.end_position.clone()
+                        )))
+                    } else {
+                        Err(InvalidCCFinderSWResult)
+                    }
+                } else {
+                    Ok(None)
+                }?;
+                example_code_part = if e.file_number == example_source_file_number {
+                    if example_code_part.is_none() {
+                        Ok(Some(CodeSlice::new(
+                            e.start_position.clone(),
+                            e.end_position.clone()
+                        )))
+                    } else {
+                        Err(InvalidCCFinderSWResult)
+                    }
+                } else {
+                    Ok(None)
+                }?;
+            }
+            let new_pair = if project_code_part.is_some() && example_code_part.is_some() {
+                Ok(ClonePair::new(
+                    project_code_part.unwrap(),
+                    example_code_part.unwrap(),
+                ))
+            } else {
+                Err(InvalidCCFinderSWResult)
+            }?;
+            res.push(new_pair);
+        }
+        Ok(res)
+    }
 }
 
-struct ResultParser {}
+pub struct ResultParser {}
 
 impl ResultParser {
     fn parse_digits<'a, E>(&self, input: &'a str) -> IResult<&'a str, u32, E>

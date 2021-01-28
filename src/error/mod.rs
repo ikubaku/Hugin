@@ -87,3 +87,14 @@ impl fmt::Display for InvalidCCFinderSWResult {
 }
 
 impl Error for InvalidCCFinderSWResult {}
+
+#[derive(Debug)]
+pub struct FileNotFoundFromResultError;
+
+impl fmt::Display for FileNotFoundFromResultError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "The file is not found from the result.")
+    }
+}
+
+impl Error for FileNotFoundFromResultError {}
