@@ -124,12 +124,15 @@ impl ParsedResult {
         let mut res = Vec::new();
         for s in &self.clone {
             let mut project_code_part = None;
+            let mut project_code_lnr = None;
             let mut example_code_part = None;
+            let mut example_code_part_lnr = None;
             for e in &s.elements {
                 debug!("SetElement: {:?}", e);
                 project_code_part = if e.file_number == project_file_number {
                     debug!("Reached project_code_part set.");
                     if project_code_part.is_none() {
+                        project_code_lnr = Some(e.lnr as f64);
                         Ok(Some(CodeSlice::new(
                             e.start_position.clone(),
                             e.end_position.clone(),
@@ -145,6 +148,7 @@ impl ParsedResult {
                 example_code_part = if e.file_number == example_source_file_number {
                     debug!("Reached example_code_part set.");
                     if example_code_part.is_none() {
+                        example_code_part_lnr = Some(e.lnr as f64);
                         Ok(Some(CodeSlice::new(
                             e.start_position.clone(),
                             e.end_position.clone(),
@@ -163,7 +167,9 @@ impl ParsedResult {
             let new_pair = if project_code_part.is_some() && example_code_part.is_some() {
                 Ok(ClonePair::new(
                     project_code_part.unwrap(),
+                    project_code_lnr.unwrap(),
                     example_code_part.unwrap(),
+                    example_code_part_lnr.unwrap(),
                 ))
             } else {
                 Err(InvalidCCFinderSWResult::new(
