@@ -80,3 +80,8 @@ pub struct JobResult {
     job: Job,
     clone_pairs: Option<Vec<ClonePair>>,
 }
+
+#[derive(Serialize)]
+pub struct JobResults {
+    pub(crate) results: Vec<JobResult>,
+}

@@ -20,7 +20,7 @@ mod session;
 use crate::config::ccfindersw::CCFinderSWConfig;
 use crate::config::Config;
 use crate::error::NoValidConfigurationError;
-use crate::job::{Job, JobResult};
+use crate::job::{Job, JobResult, JobResults};
 use crate::runner::ccfindersw::CCFinderSWRunner;
 use crate::runner::Runner;
 use crate::session::Session;
@@ -193,6 +193,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                 }
             }
+            let results = JobResults {
+                results,
+            };
 
             let mut content = String::new();
             content = toml::to_string(&results)?;
