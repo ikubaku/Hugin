@@ -5,6 +5,7 @@ use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::process::Stdio;
 
 use log::{debug, error, info, warn};
 
@@ -120,6 +121,9 @@ impl Runner for CCFinderSWRunner {
                     "-charset",
                     "auto",
                 ])
+                .stderr(Stdio::null())
+                .stdout(Stdio::null())
+                .stdin(Stdio::null())
                 .spawn()?
                 .wait()?;
             if status.success() {
