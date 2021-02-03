@@ -42,7 +42,7 @@ where R: Runner + Sync + Send + 'static,
     let threads = divided_jobs.map(|thread_jobs| {
         let runner = runner.clone();
         let mut temp = Vec::new();
-        temp.clone_from_slice(thread_jobs);
+        temp.extend_from_slice(thread_jobs);
         let thread_jobs = temp;
         thread::spawn(move || {
             let mut thread_results = Vec::new();
@@ -65,7 +65,7 @@ where R: Runner + Sync + Send + 'static,
         match t.join() {
             Ok(res) => {
                 let mut temp = Vec::new();
-                temp.clone_from(&res);
+                temp.extend(res);
                 results.append(&mut temp);
             }
             Err(e) => {
