@@ -7,7 +7,7 @@ use log::error;
 use crate::config::{CloneDetectorKind, Config};
 use crate::error::InvalidConfigurationError;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Languages {
     CPlusPlus,
 }
@@ -26,7 +26,7 @@ fn deserialize_language(s: &str) -> Result<Languages, ()> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CCFinderSWConfig {
     executable_path: PathBuf,
     token_length: u32,

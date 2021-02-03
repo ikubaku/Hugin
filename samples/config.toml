@@ -1,5 +1,6 @@
 munin_database_root = "~/munin"
 clone_detector_kind = "CCFinderSW"
+number_of_jobs = 8
 
 [clone_detector_config]
 executable_path = "~/tools/CCFinderSW-1.0/bin/CCFinderSW"

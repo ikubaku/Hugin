@@ -12,7 +12,7 @@ impl CodePosition {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct CodeSlice {
     start: CodePosition,
     end: CodePosition,
@@ -24,7 +24,7 @@ impl CodeSlice {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Scores {
     project_part: f64,
     example_sketch_part: f64,
@@ -41,7 +41,7 @@ impl Scores {
 
 // NOTE: We can't store scores as bare fields (like project_score: f64) because not everything is
 // serializable into TOML format.
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ClonePair {
     project: CodeSlice,
     example_sketch: CodeSlice,

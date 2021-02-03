@@ -237,6 +237,7 @@ dependencies = [
  "flexi_logger",
  "log",
  "nom",
+ "num-integer",
  "semver",
  "serde",
  "serde_derive",

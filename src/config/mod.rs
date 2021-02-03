@@ -17,6 +17,7 @@ pub enum CloneDetectorKind {
 pub struct Config {
     munin_database_root: String,
     clone_detector_kind: CloneDetectorKind,
+    pub(crate) number_of_jobs: usize,
     clone_detector_config: HashMap<String, String>,
 }
 
@@ -25,6 +26,7 @@ impl Config {
         Config {
             munin_database_root: String::from("~/munin"),
             clone_detector_kind: CloneDetectorKind::CCFinderSW,
+            number_of_jobs: 1,
             clone_detector_config: CCFinderSWConfig::default().to_hashmap(),
         }
     }

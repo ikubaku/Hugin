@@ -75,7 +75,7 @@ impl Job {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct JobResult {
     job: Job,
     clone_pairs: Option<Vec<ClonePair>>,

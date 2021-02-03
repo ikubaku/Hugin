@@ -19,6 +19,7 @@ use crate::job::Job;
 use crate::runner::ccfindersw::parser::ResultParser;
 use crate::runner::Runner;
 
+#[derive(Clone)]
 pub struct CCFinderSWRunner {
     project_path: PathBuf,
     database_path: PathBuf,

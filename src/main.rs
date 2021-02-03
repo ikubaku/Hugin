@@ -3,12 +3,17 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::thread;
+use std::thread::JoinHandle;
+use std::sync::Arc;
 
 use clap::clap_app;
 
 use flexi_logger::{Duplicate, LevelFilter, LogSpecBuilder, LogSpecification, Logger};
 
 use log::{debug, error, info, warn};
+
+use num_integer::div_ceil;
 
 mod clone_pair;
 mod config;
@@ -24,6 +29,53 @@ use crate::job::{Job, JobResult, JobResults};
 use crate::runner::ccfindersw::CCFinderSWRunner;
 use crate::runner::Runner;
 use crate::session::Session;
+
+fn run_jobs<R>(jobs: Arc<Vec<Job>>, runner: Arc<R>, number_of_threads: usize) -> Vec<JobResult>
+where R: Runner + Sync + Send + 'static,
+{
+    let mut results = Vec::new();
+    let divided_jobs = jobs.chunks(div_ceil(jobs.len(), number_of_threads));
+    if divided_jobs.len() != number_of_threads {
+        error!("BUG: Could not divide the job to the required number of parts.");
+    }
+    info!("Running detector on {} thread(s)...", divided_jobs.len());
+    let threads = divided_jobs.map(|thread_jobs| {
+        let runner = runner.clone();
+        let mut temp = Vec::new();
+        temp.clone_from_slice(thread_jobs);
+        let thread_jobs = temp;
+        thread::spawn(move || {
+            let mut thread_results = Vec::new();
+            for j in thread_jobs {
+                match runner.run_job(j.clone()) {
+                    Ok(res) => {
+                        let job_result = j.create_result(res);
+                        thread_results.push(job_result);
+                    }
+                    Err(e) => {
+                        error!("Job failed with error: {:?}", e);
+                    }
+                }
+            }
+            thread_results
+        })
+    }).collect::<Vec<JoinHandle<Vec<JobResult>>>>();
+
+    for t in threads {
+        match t.join() {
+            Ok(res) => {
+                let mut temp = Vec::new();
+                temp.clone_from(&res);
+                results.append(&mut temp);
+            }
+            Err(e) => {
+                error!("A thread failed with error: {:?}", e);
+            }
+        }
+    }
+
+    results
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Parse options
@@ -167,6 +219,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
         Some(config) => {
+            let number_of_jobs = config.number_of_jobs;
             let ccfindersw_config =
                 CCFinderSWConfig::try_from_config(&config).ok_or_else(|| {
                     error!("No valid configuration.");
@@ -181,18 +234,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 &config.get_absolute_database_root_path()?,
             );
 
-            let mut results = Vec::new();
-            for j in jobs {
-                match runner.run_job(j.clone()) {
-                    Ok(res) => {
-                        let job_result = j.create_result(res);
-                        results.push(job_result);
-                    }
-                    Err(e) => {
-                        error!("Job failed with error: {:?}", e);
-                    }
-                }
-            }
+            let results = run_jobs(Arc::new(jobs), Arc::new(runner), number_of_jobs);
+
             let results = JobResults {
                 results,
             };
