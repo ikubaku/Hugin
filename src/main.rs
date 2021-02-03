@@ -127,7 +127,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         _ => panic!("Invalid verbosity was specified(maybe too much switches?)."),
     };
     let log_spec = log_spec_builder.build();
-    let logger = Logger::with(log_spec).duplicate_to_stderr(Duplicate::Error);
+    // FIXME: Need better error reports.
+    //let logger = Logger::with(log_spec).duplicate_to_stderr(Duplicate::Error);
+    let logger = Logger::with(log_spec);
     let logger = if matches.is_present("LOG") {
         println!("Enabled logging to the log file.");
         logger.log_to_file()
