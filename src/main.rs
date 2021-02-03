@@ -205,7 +205,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         let job: Job = toml::from_str(contents.as_str())?;
-        println!("Found job: {:?}", job);
         jobs.push(job);
     }
 
