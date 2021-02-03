@@ -39,7 +39,6 @@ impl CCFinderSWRunner {
 
 impl Runner for CCFinderSWRunner {
     fn run_job(&self, job: Job) -> Result<Vec<ClonePair>, Box<dyn Error>> {
-        warn!("Some functionalities are not yet implemented!");
         let project_source_name = job.project.get_file_name()?;
         let example_source_name = job.example_sketch.get_file_name()?;
         let library_info = job.library_info;
