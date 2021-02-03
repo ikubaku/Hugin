@@ -15,6 +15,8 @@ use log::{debug, error, info, warn};
 
 use num_integer::div_ceil;
 
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+
 mod clone_pair;
 mod config;
 mod error;
@@ -39,7 +41,13 @@ where R: Runner + Sync + Send + 'static,
         error!("BUG: Could not divide the job to the required number of parts.");
     }
     info!("Running detector on {} thread(s)...", divided_jobs.len());
+    let m = MultiProgress::new();
+    let style = ProgressStyle::default_bar()
+        .template("PROGRESS: {wide_bar} {pos}/{len}")
+        .progress_chars("##-");
     let threads = divided_jobs.map(|thread_jobs| {
+        let bar = m.add(ProgressBar::new(thread_jobs.len() as u64));
+        bar.set_style(style.clone());
         let runner = runner.clone();
         let mut temp = Vec::new();
         temp.extend_from_slice(thread_jobs);
@@ -47,6 +55,7 @@ where R: Runner + Sync + Send + 'static,
         thread::spawn(move || {
             let mut thread_results = Vec::new();
             for j in thread_jobs {
+                bar.inc(1);
                 match runner.run_job(j.clone()) {
                     Ok(res) => {
                         let job_result = j.create_result(res);
@@ -57,10 +66,12 @@ where R: Runner + Sync + Send + 'static,
                     }
                 }
             }
+            bar.finish();
             thread_results
         })
     }).collect::<Vec<JoinHandle<Vec<JobResult>>>>();
 
+    m.join().unwrap();
     for t in threads {
         match t.join() {
             Ok(res) => {
