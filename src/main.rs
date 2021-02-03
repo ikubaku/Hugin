@@ -199,6 +199,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     match config {
         None => {
             let config = Config::default();
+            let number_of_jobs = config.number_of_jobs;
             let ccfindersw_config = CCFinderSWConfig::try_from_config(&config).unwrap();
 
             let project_path = session.get_absolute_project_path(&session_path)?;
@@ -207,16 +208,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                 &project_path,
                 &config.get_absolute_database_root_path()?,
             );
-            for j in jobs {
-                match runner.run_job(j) {
-                    Ok(res) => {
-                        info!("Result: {:?}", res);
-                    }
-                    Err(e) => {
-                        error!("Job failed with error: {:?}", e);
-                    }
-                }
-            }
+
+            let results = run_jobs(Arc::new(jobs), Arc::new(runner), number_of_jobs);
+
+            let results = JobResults {
+                results,
+            };
+
+            let mut content = String::new();
+            content = toml::to_string(&results)?;
+            write!(output_file, "{}", content)?;
         }
         Some(config) => {
             let number_of_jobs = config.number_of_jobs;
