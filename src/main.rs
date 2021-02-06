@@ -3,9 +3,9 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
-use std::sync::Arc;
 
 use clap::clap_app;
 
@@ -33,7 +33,8 @@ use crate::runner::Runner;
 use crate::session::Session;
 
 fn run_jobs<R>(jobs: Arc<Vec<Job>>, runner: Arc<R>, number_of_threads: usize) -> Vec<JobResult>
-where R: Runner + Sync + Send + 'static,
+where
+    R: Runner + Sync + Send + 'static,
 {
     let mut results = Vec::new();
     let divided_jobs = jobs.chunks(div_ceil(jobs.len(), number_of_threads));
@@ -45,31 +46,33 @@ where R: Runner + Sync + Send + 'static,
     let style = ProgressStyle::default_bar()
         .template("PROGRESS: {wide_bar} {pos}/{len}")
         .progress_chars("##-");
-    let threads = divided_jobs.map(|thread_jobs| {
-        let bar = m.add(ProgressBar::new(thread_jobs.len() as u64));
-        bar.set_style(style.clone());
-        let runner = runner.clone();
-        let mut temp = Vec::new();
-        temp.extend_from_slice(thread_jobs);
-        let thread_jobs = temp;
-        thread::spawn(move || {
-            let mut thread_results = Vec::new();
-            for j in thread_jobs {
-                bar.inc(1);
-                match runner.run_job(j.clone()) {
-                    Ok(res) => {
-                        let job_result = j.create_result(res);
-                        thread_results.push(job_result);
-                    }
-                    Err(e) => {
-                        error!("Job failed with error: {:?}", e);
+    let threads = divided_jobs
+        .map(|thread_jobs| {
+            let bar = m.add(ProgressBar::new(thread_jobs.len() as u64));
+            bar.set_style(style.clone());
+            let runner = runner.clone();
+            let mut temp = Vec::new();
+            temp.extend_from_slice(thread_jobs);
+            let thread_jobs = temp;
+            thread::spawn(move || {
+                let mut thread_results = Vec::new();
+                for j in thread_jobs {
+                    bar.inc(1);
+                    match runner.run_job(j.clone()) {
+                        Ok(res) => {
+                            let job_result = j.create_result(res);
+                            thread_results.push(job_result);
+                        }
+                        Err(e) => {
+                            error!("Job failed with error: {:?}", e);
+                        }
                     }
                 }
-            }
-            bar.finish();
-            thread_results
+                bar.finish();
+                thread_results
+            })
         })
-    }).collect::<Vec<JoinHandle<Vec<JobResult>>>>();
+        .collect::<Vec<JoinHandle<Vec<JobResult>>>>();
 
     m.join().unwrap();
     for t in threads {
@@ -223,9 +226,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             let results = run_jobs(Arc::new(jobs), Arc::new(runner), number_of_jobs);
 
-            let results = JobResults {
-                results,
-            };
+            let results = JobResults { results };
 
             let mut content = String::new();
             content = toml::to_string(&results)?;
@@ -249,9 +250,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             let results = run_jobs(Arc::new(jobs), Arc::new(runner), number_of_jobs);
 
-            let results = JobResults {
-                results,
-            };
+            let results = JobResults { results };
 
             let mut content = String::new();
             content = toml::to_string(&results)?;
